@@ -1,0 +1,209 @@
+{% extends 'banktocsv/base.html' %}
+
+{% block title %}Accueil - BankToCSV{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white rounded p-5 mb-4">
+            <h1 class="display-4">
+                <i class="bi bi-bank"></i> BankToCSV
+            </h1>
+            <p class="lead">
+                Convertissez vos relevés bancaires Attijari en CSV ou Excel facilement
+            </p>
+            <hr class="my-4">
+            <p>
+                Uploadez votre relevé bancaire PDF et obtenez instantanément un fichier CSV ou Excel 
+                avec toutes vos transactions organisées.
+            </p>
+            <a class="btn btn-light btn-lg" href="{% url 'banktocsv:upload' %}" role="button">
+                <i class="bi bi-upload"></i> Commencer
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Statistiques -->
+    <div class="col-md-4 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-file-earmark-pdf text-primary" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Relevés traités</h5>
+                <h3 class="text-primary">{{ total_statements }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-list-ul text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Transactions extraites</h5>
+                <h3 class="text-success">{{ total_transactions }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-download text-info" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Formats supportés</h5>
+                <h3 class="text-info">CSV / Excel</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Derniers relevés -->
+{% if bank_statements %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Derniers relevés traités
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nom du relevé</th>
+                                <th>Date d'upload</th>
+                                <th>Transactions</th>
+                                <th>Solde final</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for statement in bank_statements %}
+                            <tr>
+                                <td>
+                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                    {{ statement.name }}
+                                </td>
+                                <td>{{ statement.uploaded_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ statement.total_transactions }}</span>
+                                </td>
+                                <td>
+                                    {% if statement.final_balance %}
+                                        <span class="{% if statement.final_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ statement.final_balance|floatformat:2 }} TND
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if statement.processed %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Traité
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-clock"></i> En attente
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'banktocsv:statement_detail' statement.id %}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="Voir les détails">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if statement.processed %}
+                                            <a href="{% url 'banktocsv:download_csv' statement.id %}" 
+                                               class="btn btn-sm btn-outline-success" 
+                                               title="Télécharger CSV">
+                                                <i class="bi bi-file-earmark-spreadsheet"></i>
+                                            </a>
+                                            <a href="{% url 'banktocsv:download_excel' statement.id %}" 
+                                               class="btn btn-sm btn-outline-info" 
+                                               title="Télécharger Excel">
+                                                <i class="bi bi-file-excel"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'banktocsv:confirm_delete_statement' statement.id %}" 
+                                           class="btn btn-sm btn-outline-danger" 
+                                           title="Supprimer le relevé">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-file-earmark-pdf text-muted" style="font-size: 3rem;"></i>
+                <h5 class="text-muted mt-3">Aucun relevé traité</h5>
+                <p class="text-muted">Commencez par uploader votre premier relevé bancaire.</p>
+                <a href="{% url 'banktocsv:upload' %}" class="btn btn-primary">
+                    <i class="bi bi-upload"></i> Uploader un relevé
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Instructions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Comment utiliser BankToCSV
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="bi bi-upload text-primary" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">1. Upload</h6>
+                            <p class="text-muted small">
+                                Sélectionnez votre relevé bancaire PDF Attijari
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="bi bi-gear text-warning" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">2. Traitement</h6>
+                            <p class="text-muted small">
+                                Notre système extrait automatiquement les transactions
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="bi bi-download text-success" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2">3. Export</h6>
+                            <p class="text-muted small">
+                                Téléchargez vos données en CSV ou Excel
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

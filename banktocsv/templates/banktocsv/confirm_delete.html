@@ -1,0 +1,84 @@
+{% extends 'banktocsv/base.html' %}
+
+{% block title %}Supprimer - {{ bank_statement.name }} - BankToCSV{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Confirmation de suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Attention !</strong> Cette action est irréversible.
+                </div>
+                
+                <h6>Relevé à supprimer :</h6>
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-file-earmark-pdf text-danger"></i>
+                            {{ bank_statement.name }}
+                        </h6>
+                        <p class="card-text">
+                            <strong>Date d'upload :</strong> {{ bank_statement.uploaded_at|date:"d/m/Y H:i" }}<br>
+                            <strong>Transactions :</strong> {{ bank_statement.total_transactions }}<br>
+                            {% if bank_statement.final_balance %}
+                                <strong>Solde final :</strong> 
+                                <span class="{% if bank_statement.final_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ bank_statement.final_balance|floatformat:2 }} TND
+                                </span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <i class="bi bi-trash"></i>
+                    <strong>Cette action va supprimer :</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Le fichier PDF du relevé</li>
+                        <li>Toutes les {{ bank_statement.total_transactions }} transactions associées</li>
+                        <li>Toutes les données du relevé</li>
+                    </ul>
+                </div>
+                
+                <form method="post" action="{% url 'banktocsv:delete_statement' bank_statement.id %}">
+                    {% csrf_token %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'banktocsv:statement_detail' bank_statement.id %}" 
+                           class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Supprimer définitivement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Informations supplémentaires -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Informations importantes
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>La suppression est <strong>définitive</strong> et ne peut pas être annulée</li>
+                    <li>Le fichier PDF sera supprimé du serveur</li>
+                    <li>Toutes les transactions seront perdues</li>
+                    <li>Vous devrez re-uploader le PDF si vous voulez récupérer les données</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

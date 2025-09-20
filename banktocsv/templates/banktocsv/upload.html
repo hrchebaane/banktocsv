@@ -1,0 +1,144 @@
+{% extends 'banktocsv/base.html' %}
+
+{% block title %}Upload - BankToCSV{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-upload"></i> Uploader un relevé bancaire
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            <i class="bi bi-tag"></i> {{ form.name.label }}
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.name.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Donnez un nom descriptif à votre relevé (ex: "Relevé Janvier 2024")
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.pdf_file.id_for_label }}" class="form-label">
+                            <i class="bi bi-file-earmark-pdf"></i> {{ form.pdf_file.label }}
+                        </label>
+                        {{ form.pdf_file }}
+                        {% if form.pdf_file.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.pdf_file.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Sélectionnez un fichier PDF de relevé bancaire Attijari (max 10MB)
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note importante :</strong> 
+                        Seuls les PDF natifs (non scannés) sont supportés. 
+                        Le système extraira automatiquement les colonnes : Date opération, Date valeur, Libellé, Débit, Crédit.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'banktocsv:index' %}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> Uploader et traiter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Instructions détaillées -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-question-circle"></i> Instructions détaillées
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">
+                            <i class="bi bi-check-circle"></i> Format supporté
+                        </h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check text-success"></i> PDF natif (non scanné)</li>
+                            <li><i class="bi bi-check text-success"></i> Relevés Attijari Tunisie</li>
+                            <li><i class="bi bi-check text-success"></i> Taille max : 10MB</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">
+                            <i class="bi bi-x-circle"></i> Non supporté
+                        </h6>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-x text-danger"></i> PDF scannés (images)</li>
+                            <li><i class="bi bi-x text-danger"></i> Autres banques</li>
+                            <li><i class="bi bi-x text-danger"></i> Fichiers protégés</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6 class="text-primary">
+                    <i class="bi bi-lightbulb"></i> Conseils pour un meilleur résultat
+                </h6>
+                <ul>
+                    <li>Assurez-vous que le PDF contient du texte sélectionnable</li>
+                    <li>Vérifiez que le relevé contient les colonnes standard Attijari</li>
+                    <li>Le nom du relevé doit être descriptif pour faciliter l'identification</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Améliorer l'interface de sélection de fichier
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('{{ form.pdf_file.id_for_label }}');
+        const fileLabel = fileInput.nextElementSibling;
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const fileName = this.files[0].name;
+                const fileSize = (this.files[0].size / 1024 / 1024).toFixed(2);
+                
+                // Mettre à jour le label avec le nom du fichier
+                fileLabel.innerHTML = `
+                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                    ${fileName} (${fileSize} MB)
+                `;
+                
+                // Vérifier la taille du fichier
+                if (this.files[0].size > 10 * 1024 * 1024) {
+                    fileLabel.innerHTML += '<br><small class="text-danger">Fichier trop volumineux (max 10MB)</small>';
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

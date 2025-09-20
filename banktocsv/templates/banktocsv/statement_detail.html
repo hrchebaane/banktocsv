@@ -1,0 +1,204 @@
+{% extends 'banktocsv/base.html' %}
+
+{% block title %}{{ bank_statement.name }} - BankToCSV{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- En-tête du relevé -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                    {{ bank_statement.name }}
+                </h5>
+                <div>
+                    {% if bank_statement.processed %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle"></i> Traité
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning">
+                            <i class="bi bi-clock"></i> En attente
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Date d'upload :</strong><br>
+                        <span class="text-muted">{{ bank_statement.uploaded_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Nombre de transactions :</strong><br>
+                        <span class="badge bg-primary">{{ bank_statement.total_transactions }}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Solde final :</strong><br>
+                        {% if bank_statement.final_balance %}
+                            <span class="{% if bank_statement.final_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ bank_statement.final_balance|floatformat:2 }} TND
+                            </span>
+                        {% else %}
+                            <span class="text-muted">Non disponible</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Actions :</strong><br>
+                        <div class="btn-group" role="group">
+                            {% if bank_statement.processed %}
+                                <a href="{% url 'banktocsv:download_csv' bank_statement.id %}" 
+                                   class="btn btn-sm btn-success" title="Télécharger CSV">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i> CSV
+                                </a>
+                                <a href="{% url 'banktocsv:download_excel' bank_statement.id %}" 
+                                   class="btn btn-sm btn-info" title="Télécharger Excel">
+                                    <i class="bi bi-file-excel"></i> Excel
+                                </a>
+                            {% else %}
+                                <span class="text-muted">Traitement en cours...</span>
+                            {% endif %}
+                            <a href="{% url 'banktocsv:confirm_delete_statement' bank_statement.id %}" 
+                               class="btn btn-sm btn-danger" title="Supprimer le relevé">
+                                <i class="bi bi-trash"></i> Supprimer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transactions -->
+        {% if bank_statement.processed and transactions %}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul"></i> Transactions ({{ transactions|length }})
+                </h5>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'banktocsv:download_csv' bank_statement.id %}" 
+                       class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-download"></i> CSV
+                    </a>
+                    <a href="{% url 'banktocsv:download_excel' bank_statement.id %}" 
+                       class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-download"></i> Excel
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date Opération</th>
+                                <th>Date Valeur</th>
+                                <th>Libellé</th>
+                                <th class="text-end">Débit</th>
+                                <th class="text-end">Crédit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in transactions %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {{ transaction.date_operation }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        {{ transaction.date_valeur }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width: 300px;" 
+                                          title="{{ transaction.libelle }}">
+                                        {{ transaction.libelle }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    {% if transaction.debit > 0 %}
+                                        <span class="text-danger">
+                                            -{{ transaction.debit|floatformat:2 }} TND
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if transaction.credit > 0 %}
+                                        <span class="text-success">
+                                            +{{ transaction.credit|floatformat:2 }} TND
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% elif bank_statement.processed and not transactions %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                <h5 class="text-warning mt-3">Aucune transaction trouvée</h5>
+                <p class="text-muted">
+                    Le relevé a été traité mais aucune transaction n'a pu être extraite. 
+                    Vérifiez que le format du PDF correspond au standard Attijari.
+                </p>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-clock text-warning" style="font-size: 3rem;"></i>
+                <h5 class="text-warning mt-3">Traitement en cours</h5>
+                <p class="text-muted">
+                    Le relevé est en cours de traitement. Veuillez patienter...
+                </p>
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between">
+            <a href="{% url 'banktocsv:index' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Retour à l'accueil
+            </a>
+            <div>
+                <a href="{% url 'banktocsv:confirm_delete_statement' bank_statement.id %}" 
+                   class="btn btn-danger me-2">
+                    <i class="bi bi-trash"></i> Supprimer ce relevé
+                </a>
+                <a href="{% url 'banktocsv:upload' %}" class="btn btn-primary">
+                    <i class="bi bi-plus"></i> Nouveau relevé
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not bank_statement.processed %}
+<script>
+    // Actualiser la page toutes les 5 secondes si le relevé n'est pas encore traité
+    setTimeout(function() {
+        location.reload();
+    }, 5000);
+</script>
+{% endif %}
+{% endblock %}

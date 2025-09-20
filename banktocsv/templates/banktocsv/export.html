@@ -1,0 +1,103 @@
+{% extends 'banktocsv/base.html' %}
+
+{% block title %}Export - {{ bank_statement.name }} - BankToCSV{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-download"></i> Exporter le relevé
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6>Relevé : {{ bank_statement.name }}</h6>
+                    <p class="text-muted">
+                        {{ bank_statement.total_transactions }} transactions • 
+                        Uploadé le {{ bank_statement.uploaded_at|date:"d/m/Y H:i" }}
+                    </p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-file-earmark"></i> Choisir le format d'export
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="export_format" 
+                                           id="csv" value="csv" checked>
+                                    <label class="form-check-label" for="csv">
+                                        <i class="bi bi-file-earmark-spreadsheet text-success"></i>
+                                        <strong>CSV</strong>
+                                        <br><small class="text-muted">Compatible Excel, LibreOffice</small>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="export_format" 
+                                           id="excel" value="excel">
+                                    <label class="form-check-label" for="excel">
+                                        <i class="bi bi-file-excel text-info"></i>
+                                        <strong>Excel (.xlsx)</strong>
+                                        <br><small class="text-muted">Format natif Excel</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Contenu de l'export :</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Date Opération</li>
+                            <li>Date Valeur</li>
+                            <li>Libellé</li>
+                            <li>Débit</li>
+                            <li>Crédit</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'banktocsv:statement_detail' bank_statement.id %}" 
+                           class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-download"></i> Télécharger
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Téléchargements rapides -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-lightning"></i> Téléchargements rapides
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'banktocsv:download_csv' bank_statement.id %}" 
+                       class="btn btn-outline-success">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Télécharger CSV directement
+                    </a>
+                    <a href="{% url 'banktocsv:download_excel' bank_statement.id %}" 
+                       class="btn btn-outline-info">
+                        <i class="bi bi-file-excel"></i> Télécharger Excel directement
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
