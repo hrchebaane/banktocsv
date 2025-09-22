@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.contrib import messages
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -15,7 +15,7 @@ from parsers.attijari_parser import AttijariParser
 
 def index(request):
     """
-    Page d'accueil avec la liste des relevés bancaires
+    Page d'accueil avec convertisseur intégré - Une seule page pour tout faire
     """
     bank_statements = BankStatement.objects.all()[:10]  # Derniers 10 relevés
     
@@ -287,3 +287,195 @@ def confirm_delete_statement(request, statement_id):
     }
     
     return render(request, 'banktocsv/confirm_delete.html', context)
+
+
+def converter(request):
+    """
+    Page unique du convertisseur - Upload, traitement et export en une seule page
+    """
+    context = {}
+    return render(request, 'banktocsv/converter.html', context)
+
+
+def process_upload(request):
+    """
+    Traitement direct de l'upload de fichier sans base de données
+    """
+    if request.method == 'POST':
+        pdf_file = request.FILES.get('pdf_file')
+        
+        if not pdf_file:
+            return JsonResponse({
+                'success': False,
+                'message': 'Aucun fichier PDF fourni'
+            })
+        
+        # Vérifier le type de fichier
+        if not pdf_file.name.lower().endswith('.pdf'):
+            return JsonResponse({
+                'success': False,
+                'message': 'Le fichier doit être un PDF'
+            })
+        
+        # Vérifier la taille du fichier (max 10MB)
+        if pdf_file.size > 10 * 1024 * 1024:
+            return JsonResponse({
+                'success': False,
+                'message': 'Le fichier est trop volumineux (max 10MB)'
+            })
+        
+        try:
+            # Traiter le PDF avec le parser Attijari
+            parser = AttijariParser()
+            result = parser.parse_pdf(pdf_file)
+            
+            # Préparer les données des transactions
+            transactions_data = []
+            for transaction_data in result['transactions']:
+                transactions_data.append({
+                    'date_operation': transaction_data['date_operation'],
+                    'date_valeur': transaction_data['date_valeur'],
+                    'libelle': transaction_data['libelle'],
+                    'debit': float(transaction_data['debit']),
+                    'credit': float(transaction_data['credit'])
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'message': f"Relevé traité avec succès ! {result['total_transactions']} transactions extraites.",
+                'data': {
+                    'total_transactions': result['total_transactions'],
+                    'final_balance': float(result['final_balance']) if result['final_balance'] else None,
+                    'transactions': transactions_data
+                }
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f"Erreur lors du traitement du PDF: {str(e)}"
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
+
+
+def download_direct(request):
+    """
+    Téléchargement direct des données traitées sans base de données
+    """
+    if request.method == 'POST':
+        import json
+        import pandas as pd
+        from io import BytesIO
+        
+        # Récupérer les données depuis le POST
+        transactions_data = request.POST.get('transactions_data')
+        format_type = request.POST.get('format_type', 'csv')
+        
+        if not transactions_data:
+            return JsonResponse({'success': False, 'message': 'Aucune donnée fournie'})
+        
+        try:
+            # Parser les données JSON
+            transactions = json.loads(transactions_data)
+            
+            # Créer le DataFrame
+            df = pd.DataFrame(transactions)
+            
+            # Renommer les colonnes pour l'affichage
+            df.columns = ['Date Opération', 'Date Valeur', 'Libellé', 'Débit', 'Crédit']
+            
+            # Générer le nom du fichier
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"releve_attijari_{timestamp}"
+            
+            if format_type == 'csv':
+                # Export CSV
+                response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+                response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
+                
+                # Ajouter BOM pour Excel
+                response.write('\ufeff')
+                df.to_csv(response, index=False, encoding='utf-8-sig')
+                
+                return response
+                
+            elif format_type == 'excel':
+                # Export Excel
+                response = HttpResponse(
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+                response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
+                
+                # Utiliser openpyxl pour Excel
+                output = BytesIO()
+                df.to_excel(output, index=False, engine='openpyxl')
+                response.write(output.getvalue())
+                
+                return response
+            
+            return JsonResponse({'success': False, 'message': 'Format non supporté'})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': f'Erreur lors de la génération du fichier: {str(e)}'})
+    
+    return JsonResponse({'success': False, 'message': 'Méthode non autorisée'})
+
+
+def download_file(request, statement_id, format_type):
+    """
+    Téléchargement de fichier en CSV ou Excel
+    """
+    bank_statement = get_object_or_404(BankStatement, id=statement_id)
+    
+    if not bank_statement.processed:
+        raise Http404("Relevé non traité")
+    
+    # Récupérer les transactions
+    transactions = bank_statement.transactions.all()
+    
+    # Créer le DataFrame
+    import pandas as pd
+    data = []
+    for transaction in transactions:
+        data.append({
+            'Date Opération': transaction.date_operation,
+            'Date Valeur': transaction.date_valeur,
+            'Libellé': transaction.libelle,
+            'Débit': float(transaction.debit),
+            'Crédit': float(transaction.credit)
+        })
+    
+    df = pd.DataFrame(data)
+    
+    # Générer le nom du fichier
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f"releve_{bank_statement.name}_{timestamp}"
+    
+    if format_type == 'csv':
+        # Export CSV
+        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+        response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
+        
+        # Ajouter BOM pour Excel
+        response.write('\ufeff')
+        df.to_csv(response, index=False, encoding='utf-8-sig')
+        
+        return response
+        
+    elif format_type == 'excel':
+        # Export Excel
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename}.xlsx"'
+        
+        # Utiliser openpyxl pour Excel
+        from io import BytesIO
+        output = BytesIO()
+        df.to_excel(output, index=False, engine='openpyxl')
+        response.write(output.getvalue())
+        
+        return response
+    
+    raise Http404("Format non supporté")

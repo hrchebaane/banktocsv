@@ -4,7 +4,8 @@ Un MVP Django pour convertir automatiquement les relevés bancaires PDF d'Attija
 
 ## 🚀 Fonctionnalités
 
-- **Upload de PDF** : Interface simple pour uploader des relevés bancaires PDF
+- **Interface unifiée** : Une seule page pour tout faire - upload, conversion et téléchargement
+- **Upload simplifié** : Glisser-déposer ou sélection de fichier PDF
 - **Extraction automatique** : Utilise pdfplumber pour extraire les données des PDF natifs
 - **Colonnes extraites** :
   - Date opération
@@ -13,9 +14,9 @@ Un MVP Django pour convertir automatiquement les relevés bancaires PDF d'Attija
   - Débit
   - Crédit
   - Solde final
-- **Export multiple** : CSV et Excel (.xlsx)
-- **Interface moderne** : Bootstrap 5 avec design responsive
-- **Base de données** : Stockage des relevés et transactions en SQLite
+- **Export multiple** : CSV et Excel (.xlsx) en un clic
+- **Interface moderne** : Bootstrap 5 avec design responsive et animations
+- **Expérience fluide** : Traitement en temps réel sans rechargement de page
 
 ## 📋 Prérequis
 
@@ -96,20 +97,21 @@ banktocsv/
 
 ## 🔧 Utilisation
 
-### 1. Upload d'un relevé
-- Aller sur la page d'upload
-- Donner un nom descriptif au relevé
-- Sélectionner le fichier PDF Attijari
-- Cliquer sur "Uploader et traiter"
+### Expérience simplifiée - Une seule page !
 
-### 2. Visualisation des transactions
-- Après upload, vous êtes redirigé vers la page de détail
-- Visualiser toutes les transactions extraites
-- Voir le solde final
+1. **Accéder à l'application** : Ouvrir http://127.0.0.1:8000
+2. **Upload du PDF** : 
+   - Glisser-déposer votre relevé PDF Attijari
+   - Ou cliquer pour sélectionner un fichier
+3. **Conversion automatique** : 
+   - Cliquer sur "Convertir en CSV/Excel"
+   - Le système traite automatiquement le fichier
+4. **Téléchargement** : 
+   - Voir l'aperçu des transactions extraites
+   - Télécharger en CSV ou Excel en un clic
+   - Option "Nouveau fichier" pour traiter un autre relevé
 
-### 3. Export des données
-- Cliquer sur "CSV" ou "Excel" pour télécharger
-- Ou utiliser la page d'export pour choisir le format
+**C'est tout !** Plus besoin de naviguer entre différentes pages.
 
 ## 🎯 Format PDF supporté
 
@@ -139,6 +141,8 @@ Solde final: 950.00 TND
 - Historique des exports
 - Validation avancée des PDF
 - Support des PDF scannés (OCR)
+- Mode hors-ligne (PWA)
+- Traitement par lots de plusieurs fichiers
 
 ## 🐛 Dépannage
 

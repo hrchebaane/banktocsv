@@ -1,13 +1,21 @@
 {% extends 'banktocsv/base.html' %}
 
-{% block title %}BankToCSV - Convertisseur de relevés bancaires{% endblock %}
+{% block title %}Convertisseur - BankToCSV{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Styles simplifiés pour la zone d'upload */
+    /* Container du formulaire minimaliste */
+    .upload-form-container {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    /* Zone de drop minimaliste */
     .upload-zone-minimal {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
+        padding: 2rem 1.5rem;
+        text-align: center;
         background: #ffffff;
         transition: all 0.2s ease;
         cursor: pointer;
@@ -20,30 +28,185 @@
     }
     
     .upload-zone-minimal.dragover {
-        border-color: #28a745 !important;
-        background: #f8fff8 !important;
-        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.1) !important;
+        border-color: #28a745;
+        background: #f8fff8;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.1);
+    }
+    
+    .upload-content-minimal {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .upload-icon-minimal {
+        margin-bottom: 1rem;
+    }
+    
+    .upload-icon-minimal i {
+        font-size: 2.5rem;
+        color: #6c757d;
+        transition: all 0.2s ease;
     }
     
     .upload-zone-minimal:hover .upload-icon-minimal i {
-        color: #007bff !important;
+        color: #007bff;
     }
     
     .upload-zone-minimal.dragover .upload-icon-minimal i {
-        color: #28a745 !important;
+        color: #28a745;
+    }
+    
+    .upload-text-minimal h6 {
+        color: #333;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 1rem;
+    }
+    
+    .upload-text-minimal p {
+        color: #666;
+        margin: 0.5rem 0;
+        font-size: 0.9rem;
+    }
+    
+    /* Bouton d'upload minimaliste */
+    .btn-upload-minimal {
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 1rem 0;
     }
     
     .btn-upload-minimal:hover {
-        background: #0056b3 !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2) !important;
+        background: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
     }
     
-    #removeFile:hover {
-        background: #c82333 !important;
-        transform: scale(1.1) !important;
+    .btn-upload-minimal:active {
+        transform: translateY(0);
     }
     
+    .upload-info-minimal {
+        margin-top: 1rem;
+    }
+    
+    .upload-info-minimal small {
+        color: #888;
+        font-size: 0.8rem;
+    }
+    
+    /* Zone de fichier sélectionné minimaliste */
+    .file-selected-minimal {
+        animation: slideIn 0.3s ease-out;
+        margin-top: 1rem;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .file-preview-minimal {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        gap: 1rem;
+    }
+    
+    .file-icon-minimal {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        background: #dc3545;
+        border-radius: 6px;
+        color: white;
+        font-size: 1.2rem;
+    }
+    
+    .file-details-minimal {
+        flex: 1;
+    }
+    
+    .file-name-minimal {
+        font-weight: 500;
+        color: #333;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .file-size-minimal {
+        color: #666;
+        font-size: 0.8rem;
+    }
+    
+    .btn-remove-minimal {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+    
+    .btn-remove-minimal:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+    
+    /* Styles importants pour forcer l'application */
+    .upload-zone-minimal {
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 8px !important;
+        padding: 2rem 1.5rem !important;
+        text-align: center !important;
+        background: #ffffff !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        position: relative !important;
+    }
+    
+    .btn-upload-minimal {
+        background: #007bff !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.5rem !important;
+        margin: 1rem 0 !important;
+    }
     
     /* Styles pour le bouton de conversion principal */
     .btn-primary {
@@ -100,7 +263,6 @@
     .table tbody tr:hover {
         background-color: rgba(0, 123, 255, 0.05);
     }
-    
 </style>
 {% endblock %}
 
@@ -114,16 +276,11 @@
             <p class="lead">
                 Convertissez vos relevés bancaires Attijari en CSV ou Excel en quelques clics
             </p>
-            <hr class="my-4">
-            <p>
-                Uploadez votre relevé bancaire PDF et obtenez instantanément un fichier CSV ou Excel 
-                avec toutes vos transactions organisées. Simple, rapide et gratuit !
-            </p>
         </div>
     </div>
 </div>
 
-<!-- Zone d'upload intégrée -->
+<!-- Zone d'upload -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
@@ -136,47 +293,47 @@
                 <form id="uploadForm" enctype="multipart/form-data">
                     {% csrf_token %}
                     
-                    <!-- Zone d'upload unifiée -->
-                    <div class="upload-zone-minimal" id="uploadZone" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; min-height: 200px; padding: 3rem 1.5rem;">
-                        
-                        <!-- État initial : Zone d'upload -->
-                        <div id="uploadInitialState">
-                            <div class="upload-icon-minimal" style="margin-bottom: 1rem;">
-                                <i class="bi bi-cloud-upload" style="font-size: 2.5rem; color: #6c757d;"></i>
+                    <!-- Formulaire minimaliste -->
+                    <div class="upload-form-container">
+                        <!-- Zone de drop minimaliste -->
+                        <div class="upload-zone-minimal" id="uploadZone">
+                            <div class="upload-content-minimal">
+                                <div class="upload-icon-minimal">
+                                    <i class="bi bi-cloud-upload"></i>
+                                </div>
+                                <div class="upload-text-minimal">
+                                    <h6>Glissez-déposez votre PDF</h6>
+                                    <p>ou</p>
+                                </div>
+                                <button type="button" class="btn-upload-minimal" id="uploadBtnTrigger">
+                                    <i class="bi bi-plus-circle"></i>
+                                    Choisir un fichier
+                                </button>
+                                <div class="upload-info-minimal">
+                                    <small>PDF uniquement • Max 10MB</small>
+                                </div>
                             </div>
-                            <div class="upload-text-minimal" style="margin-bottom: 1rem;">
-                                <h6 style="color: #333; margin-bottom: 0.5rem; font-weight: 500; font-size: 1rem;">Glissez-déposez votre PDF</h6>
-                                <p style="color: #666; margin: 0.5rem 0; font-size: 0.9rem;">ou</p>
-                            </div>
-                            <button type="button" class="btn-upload-minimal" id="uploadBtnTrigger" style="background: #007bff; color: white; border: none; border-radius: 6px; padding: 0.75rem 1.5rem; font-size: 0.9rem; font-weight: 500; cursor: pointer; margin: 1rem 0; display: inline-flex; align-items: center; gap: 0.5rem;">
-                                <i class="bi bi-plus-circle"></i>
-                                Choisir un fichier
-                            </button>
-                            <div class="upload-info-minimal" style="margin-top: 1rem;">
-                                <small style="color: #888; font-size: 0.8rem;">PDF uniquement • Max 10MB</small>
-                            </div>
+                            <input type="file" class="d-none" id="pdfFile" name="pdf_file" 
+                                   accept=".pdf" required>
                         </div>
                         
-                        <!-- État fichier sélectionné : Aperçu du fichier -->
-                        <div id="fileSelectedState" style="display: none; width: 100%;">
-                            <div style="display: flex; align-items: center; padding: 1rem; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; gap: 1rem;">
-                                <div style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: #dc3545; border-radius: 6px; color: white; font-size: 1.2rem;">
+                        <!-- Zone de fichier sélectionné minimaliste -->
+                        <div class="file-selected-minimal d-none" id="fileSelected">
+                            <div class="file-preview-minimal">
+                                <div class="file-icon-minimal">
                                     <i class="bi bi-file-earmark-pdf"></i>
                                 </div>
-                                <div style="flex: 1; text-align: left;">
-                                    <div id="fileName" style="font-weight: 500; color: #333; font-size: 0.9rem; margin-bottom: 0.25rem;">Nom du fichier</div>
-                                    <div id="fileSize" style="color: #666; font-size: 0.8rem;">Taille du fichier</div>
+                                <div class="file-details-minimal">
+                                    <div class="file-name-minimal" id="fileName">Nom du fichier</div>
+                                    <div class="file-size-minimal" id="fileSize">Taille du fichier</div>
                                 </div>
-                                <button type="button" id="removeFile" style="background: #dc3545; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem;">
+                                <button type="button" class="btn-remove-minimal" id="removeFile">
                                     <i class="bi bi-x"></i>
                                 </button>
                             </div>
                         </div>
-                        
-                        <input type="file" class="d-none" id="pdfFile" name="pdf_file" 
-                               accept=".pdf">
                     </div>
-                    </div>
+                    
                     
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn">
@@ -277,39 +434,6 @@
     </div>
 </div>
 
-<div class="row">
-    <!-- Statistiques -->
-    <div class="col-md-4 mb-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-file-earmark-pdf text-primary" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Relevés traités</h5>
-                <h3 class="text-primary">{{ total_statements }}</h3>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-list-ul text-success" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Transactions extraites</h5>
-                <h3 class="text-success">{{ total_transactions }}</h3>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4 mb-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-download text-info" style="font-size: 2rem;"></i>
-                <h5 class="card-title mt-2">Formats supportés</h5>
-                <h3 class="text-info">CSV / Excel</h3>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 <!-- Instructions -->
 <div class="row mt-4">
@@ -373,27 +497,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestion de l'upload
     uploadForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
-        // Validation manuelle du fichier
-        const fileInput = document.getElementById('pdfFile');
-        if (!fileInput.files || fileInput.files.length === 0) {
-            alert('Veuillez sélectionner un fichier PDF avant de continuer.');
-            return;
-        }
-        
-        const file = fileInput.files[0];
-        
-        // Validation du type de fichier
-        if (!file.name.toLowerCase().endsWith('.pdf')) {
-            alert('Veuillez sélectionner un fichier PDF valide.');
-            return;
-        }
-        
-        // Validation de la taille du fichier (max 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            alert('Le fichier est trop volumineux. Taille maximale autorisée : 10MB');
-            return;
-        }
         
         const formData = new FormData(uploadForm);
         
@@ -536,16 +639,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function resetUploadInterface() {
         // Réinitialiser l'interface d'upload
         fileInput.value = '';
-        uploadInitialState.style.display = 'block';
-        fileSelectedState.style.display = 'none';
+        uploadZone.style.display = 'block';
+        fileSelected.classList.add('d-none');
         currentTransactionsData = null;
     }
     
     // Gestion de l'interface drag & drop minimaliste
     const uploadZone = document.getElementById('uploadZone');
-    const uploadInitialState = document.getElementById('uploadInitialState');
-    const fileSelectedState = document.getElementById('fileSelectedState');
     const fileInput = document.getElementById('pdfFile');
+    const fileSelected = document.getElementById('fileSelected');
     const fileName = document.getElementById('fileName');
     const fileSize = document.getElementById('fileSize');
     const removeFileBtn = document.getElementById('removeFile');
@@ -595,8 +697,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gestion de la suppression de fichier
     removeFileBtn.addEventListener('click', function() {
         fileInput.value = '';
-        uploadInitialState.style.display = 'block';
-        fileSelectedState.style.display = 'none';
+        uploadZone.style.display = 'block';
+        fileSelected.classList.add('d-none');
     });
     
     // Fonction pour gérer la sélection de fichier
@@ -617,9 +719,9 @@ document.addEventListener('DOMContentLoaded', function() {
         fileName.textContent = file.name;
         fileSize.textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
         
-        // Basculer entre les états
-        uploadInitialState.style.display = 'none';
-        fileSelectedState.style.display = 'block';
+        // Masquer la zone d'upload et afficher le fichier sélectionné
+        uploadZone.style.display = 'none';
+        fileSelected.classList.remove('d-none');
     }
 });
 </script>
